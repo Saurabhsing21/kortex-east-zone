@@ -69,24 +69,25 @@ router.post('/upload', requireAuth, requireAdmin, upload.single('video'), async 
             return res.status(400).json({ error: 'Video title is required' });
         }
 
-        // Upload video to Cloudinary using upload_stream
-        const uploadPromise = new Promise((resolve, reject) => {
-            const uploadStream = cloudinary.uploader.upload_stream(
-                {
-                    resource_type: 'video',
-                    folder: 'kortex-east-zone',
-                    public_id: `video_${Date.now()}`,
-                },
-                (error, result) => {
-                    if (error) reject(error);
-                    else resolve(result);
-                }
-            );
+        // Local File Storage Implementation for MVP
+        const fileName = `video_${Date.now()}_${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.mp4`;
+        const filePath = path.join(__dirname, '../uploads', fileName);
 
-            uploadStream.end(req.file.buffer);
-        });
+        // Ensure uploads directory exists (just in case)
+        await fs.mkdir(path.join(__dirname, '../uploads'), { recursive: true });
 
-        const result = await uploadPromise;
+        // Write file buffer to disk
+        await fs.writeFile(filePath, req.file.buffer);
+
+        // Construct local URL
+        // Note: Assuming backend runs on port 5001 based on current setup
+        const PORT = process.env.PORT || 5001;
+        const result = {
+            public_id: fileName,
+            secure_url: `http://localhost:${PORT}/uploads/${fileName}`,
+            duration: 0, // Duration calculation skipped
+            format: 'mp4'
+        };
 
         // Create video metadata
         const videoMetadata = {
@@ -97,7 +98,8 @@ router.post('/upload', requireAuth, requireAdmin, upload.single('video'), async 
             uploadedBy: req.auth.userId,
             createdAt: new Date().toISOString(),
             duration: result.duration,
-            format: result.format
+            format: result.format,
+            views: 0 // Initialize views
         };
 
         // Save to videos.json
@@ -112,6 +114,35 @@ router.post('/upload', requireAuth, requireAdmin, upload.single('video'), async 
     } catch (error) {
         console.error('Error uploading video:', error);
         res.status(500).json({ error: 'Failed to upload video' });
+    }
+});
+
+// POST increment view count - User/Admin
+router.post('/:publicId/view', async (req, res) => {
+    try {
+        const { publicId } = req.params;
+        const videos = await readVideos();
+        const videoIndex = videos.findIndex(v => v.public_id === publicId);
+
+        if (videoIndex === -1) {
+            return res.status(404).json({ error: 'Video not found' });
+        }
+
+        // Initialize views if not present (migration for old data)
+        if (!videos[videoIndex].views) {
+            videos[videoIndex].views = 0;
+        }
+
+        videos[videoIndex].views += 1;
+        await writeVideos(videos);
+
+        res.json({
+            message: 'View counted',
+            views: videos[videoIndex].views
+        });
+    } catch (error) {
+        console.error('Error incrementing view:', error);
+        res.status(500).json({ error: 'Failed to increment view count' });
     }
 });
 

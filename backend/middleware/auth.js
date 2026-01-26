@@ -1,34 +1,36 @@
-import { ClerkExpressRequireAuth } from '@clerk/clerk-sdk-node';
+import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-
 dotenv.config();
 
-// Middleware to verify Clerk authentication
-export const requireAuth = ClerkExpressRequireAuth({
-    secretKey: process.env.CLERK_SECRET_KEY
-});
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_key_123';
 
-// Middleware to check if user is Admin
-export const requireAdmin = (req, res, next) => {
-    const { userId, sessionClaims } = req.auth;
+// Middleware to verify JWT authentication
+export const requireAuth = (req, res, next) => {
+    const authHeader = req.headers.authorization;
 
-    // Check if user has admin role in metadata
-    const userRole = sessionClaims?.metadata?.role || sessionClaims?.publicMetadata?.role;
-
-    if (userRole !== 'admin') {
-        return res.status(403).json({ error: 'Access denied. Admin role required.' });
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Unauthorized: No token provided' });
     }
 
+    const token = authHeader.split(' ')[1];
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.auth = decoded; // Attach decoded payload (userId, role) to req
+        next();
+    } catch (error) {
+        return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+    }
+};
+
+export const requireAdmin = (req, res, next) => {
+    if (req.auth.role !== 'admin') {
+        return res.status(403).json({ error: 'Access denied: Admin only' });
+    }
     next();
 };
 
-// Middleware to check if user is authenticated (Admin or User)
 export const requireUser = (req, res, next) => {
-    const { userId } = req.auth;
-
-    if (!userId) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
-
+    // Both Admin and User can access user routes
     next();
 };

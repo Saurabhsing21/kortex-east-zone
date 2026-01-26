@@ -2,14 +2,38 @@ import { X } from 'lucide-react'
 import { useEffect } from 'react'
 
 function VideoPlayer({ video, onClose }) {
-    // Close on ESC key
+    // Close on ESC key and Increment View
     useEffect(() => {
         const handleEsc = (e) => {
             if (e.key === 'Escape') onClose()
         }
         window.addEventListener('keydown', handleEsc)
+
+        // Increment view count
+        const incrementView = async () => {
+            try {
+                // Determine API URL (handle if it's not set in env)
+                const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+                // We don't need auth strictly for counting views, or we can use the user's token if available. 
+                // For MVP simple public endpoint or optional auth is fine. 
+                // The backend endpoint I added didn't use 'requireAuth' to allow easier access, 
+                // but let's double check if I added it...
+                // I did NOT add requireAuth to the view endpoint in the backend code I just wrote. Good.
+                await fetch(`${API_URL}/videos/${video.public_id}/view`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to increment view count', error);
+            }
+        };
+
+        incrementView();
+
         return () => window.removeEventListener('keydown', handleEsc)
-    }, [onClose])
+    }, [onClose, video.public_id])
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4">

@@ -1,29 +1,35 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { SignedIn, SignedOut } from '@clerk/clerk-react'
-import Landing from './pages/Landing'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import './App.css'
 
+function PrivateRoute({ children }) {
+    const { user, loading } = useAuth();
+
+    if (loading) return <div>Loading...</div>;
+
+    return user ? children : <Navigate to="/login" replace />;
+}
+
 function App() {
     return (
-        <Router>
-            <Routes>
-                <Route path="/" element={<Landing />} />
-                <Route
-                    path="/dashboard"
-                    element={
-                        <>
-                            <SignedIn>
+        <AuthProvider>
+            <Router>
+                <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route
+                        path="/"
+                        element={
+                            <PrivateRoute>
                                 <Dashboard />
-                            </SignedIn>
-                            <SignedOut>
-                                <Navigate to="/" replace />
-                            </SignedOut>
-                        </>
-                    }
-                />
-            </Routes>
-        </Router>
+                            </PrivateRoute>
+                        }
+                    />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+            </Router>
+        </AuthProvider>
     )
 }
 

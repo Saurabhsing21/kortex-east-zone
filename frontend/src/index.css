@@ -1,31 +1,152 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .font-sans {
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+
+
 @layer base {
   body {
-    @apply bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen;
+    @apply bg-background text-foreground min-h-screen font-sans antialiased;
+  }
+
+  :root {
+    /* Background: #faf5ff (purple-50) */
+    --background: 270 100% 98%;
+    --foreground: 221 39% 11%;
+
+    /* Card: White */
+    --card: 0 0% 100%;
+    --card-foreground: 221 39% 11%;
+
+    /* Popover: White */
+    --popover: 0 0% 100%;
+    --popover-foreground: 221 39% 11%;
+
+    /* Primary: #7e22ce -> 272 72% 47% */
+    --primary: 272 72% 47%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: #e9d5ff (button.secondary-bg) -> 269 100% 92% */
+    --secondary: 269 100% 92%;
+    --secondary-foreground: 272 72% 47%;
+
+    /* Muted: gray-100 #f3f4f6 -> 220 14% 96% */
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+
+    /* Accent: #d8b4fe (purple.medium) -> 269 97% 85% */
+    --accent: 269 97% 85%;
+    --accent-foreground: 272 72% 47%;
+
+    /* Destructive: #ef4444 -> 0 84% 60% */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Border: gray-200 #e5e7eb -> 220 13% 91% */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 272 72% 47%;
+
+    --radius: 0.75rem;
+
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
+
+  .dark {
+
+    --background: 0 0% 3.9%;
+
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 3.9%;
+
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 3.9%;
+
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 98%;
+
+    --primary-foreground: 0 0% 9%;
+
+    --secondary: 0 0% 14.9%;
+
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 14.9%;
+
+    --muted-foreground: 0 0% 63.9%;
+
+    --accent: 0 0% 14.9%;
+
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 14.9%;
+
+    --input: 0 0% 14.9%;
+
+    --ring: 0 0% 83.1%;
+
+    --chart-1: 220 70% 50%;
+
+    --chart-2: 160 60% 45%;
+
+    --chart-3: 30 80% 55%;
+
+    --chart-4: 280 65% 60%;
+
+    --chart-5: 340 75% 55%;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5;
+    @apply bg-gradient-primary hover:opacity-90 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105;
   }
-  
+
   .btn-secondary {
-    @apply bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5;
+    @apply bg-purple-100 text-purple-700 hover:bg-purple-200 font-semibold py-3 px-6 rounded-lg shadow-sm hover:shadow-md transition-all duration-300;
   }
-  
+
   .btn-danger {
-    @apply bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300;
+    @apply bg-gradient-to-r from-red-500 to-pink-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-300;
   }
-  
+
   .card {
     @apply bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 overflow-hidden;
   }
-  
+
   .input-field {
     @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200;
+  }
+}
+
+
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 }

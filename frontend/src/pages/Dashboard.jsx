@@ -1,16 +1,21 @@
-import { useUser } from '@clerk/clerk-react'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import Header from '../components/Header'
 import VideoCard from '../components/VideoCard'
 import VideoUpload from '../components/VideoUpload'
 import VideoPlayer from '../components/VideoPlayer'
-import { Search, Video } from 'lucide-react'
+import Analytics from '../components/Analytics'
+import { Search, Video, Plus } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const API_URL = import.meta.env.VITE_API_URL
 
 function Dashboard() {
-    const { user } = useUser()
+    const { user } = useAuth()
+
     const [videos, setVideos] = useState([])
     const [filteredVideos, setFilteredVideos] = useState([])
     const [searchQuery, setSearchQuery] = useState('')
@@ -18,9 +23,12 @@ function Dashboard() {
     const [selectedVideo, setSelectedVideo] = useState(null)
     const [showUpload, setShowUpload] = useState(false)
 
-    // Determine user role from metadata
-    const userRole = user?.publicMetadata?.role || user?.unsafeMetadata?.role || 'user'
+    // Determine user role (ensure user object exists)
+    const userRole = user?.role || 'user'
     const isAdmin = userRole === 'admin'
+
+    // Helper to get token for requests
+    const getToken = () => localStorage.getItem('token')
 
     useEffect(() => {
         fetchVideos()
@@ -41,7 +49,7 @@ function Dashboard() {
     const fetchVideos = async () => {
         try {
             setLoading(true)
-            const token = await user.getToken()
+            const token = getToken()
             const response = await axios.get(`${API_URL}/videos`, {
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -65,7 +73,7 @@ function Dashboard() {
         if (!confirm('Are you sure you want to delete this video?')) return
 
         try {
-            const token = await user.getToken()
+            const token = getToken()
             await axios.delete(`${API_URL}/videos/${publicId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -79,70 +87,75 @@ function Dashboard() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-50 text-foreground">
             <Header userRole={userRole} />
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
                 {/* Welcome Section */}
-                <div className="mb-8">
-                    <h2 className="text-3xl font-bold text-gray-800 mb-2">
-                        Welcome, {user?.firstName || user?.username || 'User'}
-                    </h2>
-                    <p className="text-gray-600">
-                        {isAdmin ? 'Admin Dashboard - Manage your video library' : 'Browse and watch videos'}
-                    </p>
-                </div>
-
-                {/* Search and Upload Section */}
-                <div className="mb-8 flex flex-col sm:flex-row gap-4 items-center justify-between">
-                    <div className="relative flex-1 max-w-md w-full">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <input
-                            type="text"
-                            placeholder="Search videos..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="input-field pl-10"
-                        />
+                <div className="bg-gradient-to-r from-purple-100 via-purple-50 to-pink-50 rounded-2xl p-8 shadow-sm border border-purple-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 className="text-3xl font-bold tracking-tight text-gray-900">
+                            Welcome, <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-pink-600">{user?.firstName || user?.username || 'User'}</span>
+                        </h2>
+                        <p className="text-slate-600 mt-2 text-lg">
+                            {isAdmin ? 'Manage your video library and view analytics.' : 'Browse and watch your favorite videos.'}
+                        </p>
                     </div>
 
                     {isAdmin && (
-                        <button
-                            onClick={() => setShowUpload(!showUpload)}
-                            className="btn-primary flex items-center gap-2"
+                        <Button
+                            onClick={() => setShowUpload(true)}
+                            className="bg-gradient-to-r from-purple-700 to-purple-900 hover:from-purple-800 hover:to-purple-950 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-lg px-6 py-6 h-auto text-base"
                         >
-                            <Video className="w-5 h-5" />
+                            <Plus className="w-5 h-5 mr-2" />
                             Upload Video
-                        </button>
+                        </Button>
                     )}
                 </div>
 
-                {/* Upload Section */}
-                {isAdmin && showUpload && (
-                    <div className="mb-8">
-                        <VideoUpload onVideoUploaded={handleVideoUploaded} />
-                    </div>
+                {/* Analytics Section (Admin only) */}
+                {isAdmin && videos.length > 0 && !loading && (
+                    <Analytics videos={videos} />
                 )}
 
-                {/* Video Player Modal */}
-                {selectedVideo && (
-                    <VideoPlayer
-                        video={selectedVideo}
-                        onClose={() => setSelectedVideo(null)}
+                {/* Search and Filter */}
+                <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm focus-within:ring-2 focus-within:ring-purple-500/20 focus-within:border-purple-300 transition-all duration-300 max-w-md">
+                    <Search className="w-5 h-5 text-purple-600" />
+                    <Input
+                        placeholder="Search videos..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent placeholder:text-gray-400 h-10 text-base"
                     />
-                )}
+                </div>
 
                 {/* Videos Grid */}
                 {loading ? (
-                    <div className="flex justify-center items-center py-20">
-                        <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {[...Array(8)].map((_, i) => (
+                            <div key={i} className="space-y-3">
+                                <Skeleton className="h-[225px] w-full rounded-xl" />
+                                <div className="space-y-2">
+                                    <Skeleton className="h-4 w-[250px]" />
+                                    <Skeleton className="h-4 w-[200px]" />
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 ) : filteredVideos.length === 0 ? (
-                    <div className="text-center py-20">
-                        <Video className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600 text-lg">
-                            {searchQuery ? 'No videos found matching your search' : 'No videos uploaded yet'}
+                    <div className="flex flex-col items-center justify-center py-20 bg-muted/30 rounded-xl border border-dashed">
+                        <div className="bg-muted p-4 rounded-full mb-4">
+                            <Video className="w-10 h-10 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-foreground">No videos found</h3>
+                        <p className="text-muted-foreground mt-1 max-w-sm text-center">
+                            {searchQuery ? 'Try adjusting your search terms.' : 'Get started by uploading your first video.'}
                         </p>
+                        {isAdmin && !searchQuery && (
+                            <Button variant="link" onClick={() => setShowUpload(true)} className="mt-2 text-primary">
+                                Upload a video
+                            </Button>
+                        )}
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -158,6 +171,23 @@ function Dashboard() {
                     </div>
                 )}
             </div>
+
+            {/* Video Player Modal */}
+            {selectedVideo && (
+                <VideoPlayer
+                    video={selectedVideo}
+                    onClose={() => setSelectedVideo(null)}
+                />
+            )}
+
+            {/* Upload Dialog */}
+            {isAdmin && (
+                <VideoUpload
+                    open={showUpload}
+                    onOpenChange={setShowUpload}
+                    onVideoUploaded={handleVideoUploaded}
+                />
+            )}
         </div>
     )
 }

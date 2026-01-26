@@ -1,1 +1,35 @@
-[]
+[
+  {
+    "id": "1769436913389",
+    "title": "testing ",
+    "public_id": "mock_video_1769436913388",
+    "secure_url": "https://res.cloudinary.com/demo/video/upload/v1/dog",
+    "uploadedBy": "mock_admin_id",
+    "createdAt": "2026-01-26T14:15:13.389Z",
+    "duration": 12,
+    "format": "mp4",
+    "views": 2
+  },
+  {
+    "id": "1769437107828",
+    "title": "test3",
+    "public_id": "mock_video_1769437107828",
+    "secure_url": "https://res.cloudinary.com/demo/video/upload/v1/dog",
+    "uploadedBy": "mock_admin_id",
+    "createdAt": "2026-01-26T14:18:27.828Z",
+    "duration": 12,
+    "format": "mp4",
+    "views": 2
+  },
+  {
+    "id": "1769437394687",
+    "title": "testing 4",
+    "public_id": "video_1769437394671_testing_4.mp4",
+    "secure_url": "http://localhost:5001/uploads/video_1769437394671_testing_4.mp4",
+    "uploadedBy": "mock_admin_id",
+    "createdAt": "2026-01-26T14:23:14.687Z",
+    "duration": 0,
+    "format": "mp4",
+    "views": 8
+  }
+]

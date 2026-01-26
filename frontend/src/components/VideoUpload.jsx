@@ -1,12 +1,22 @@
 import { useState } from 'react'
-import { useUser } from '@clerk/clerk-react'
 import axios from 'axios'
-import { Upload, X } from 'lucide-react'
+import { Upload, X, Film, FileVideo } from 'lucide-react'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Progress } from "@/components/ui/progress"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 const API_URL = import.meta.env.VITE_API_URL
 
-function VideoUpload({ onVideoUploaded }) {
-    const { user } = useUser()
+function VideoUpload({ open, onOpenChange, onVideoUploaded }) {
     const [title, setTitle] = useState('')
     const [file, setFile] = useState(null)
     const [uploading, setUploading] = useState(false)
@@ -49,7 +59,7 @@ function VideoUpload({ onVideoUploaded }) {
         setError('')
 
         try {
-            const token = await user.getToken()
+            const token = localStorage.getItem('token')
             const formData = new FormData()
             formData.append('video', file)
             formData.append('title', title)
@@ -72,7 +82,8 @@ function VideoUpload({ onVideoUploaded }) {
             setFile(null)
             setProgress(0)
 
-            // Notify parent component
+            // Close dialog and notify
+            onOpenChange(false)
             onVideoUploaded()
         } catch (err) {
             console.error('Upload error:', err)
@@ -88,105 +99,127 @@ function VideoUpload({ onVideoUploaded }) {
     }
 
     return (
-        <div className="card p-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Upload New Video</h3>
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <Film className="w-5 h-5 text-primary" />
+                        Upload New Video
+                    </DialogTitle>
+                    <DialogDescription>
+                        Share your video with the Kortex East Zone community.
+                    </DialogDescription>
+                </DialogHeader>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Title Input */}
-                <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Video Title
-                    </label>
-                    <input
-                        type="text"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="Enter video title..."
-                        className="input-field"
-                        disabled={uploading}
-                    />
-                </div>
+                <form onSubmit={handleSubmit} className="space-y-6 mt-4">
+                    {/* Error Message */}
+                    {error && (
+                        <Alert variant="destructive">
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                    )}
 
-                {/* File Input */}
-                <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Video File
-                    </label>
+                    {/* Title Input */}
+                    <div className="space-y-2">
+                        <Label htmlFor="title">Video Title</Label>
+                        <Input
+                            id="title"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            placeholder="e.g. Q1 2026 Town Hall"
+                            disabled={uploading}
+                        />
+                    </div>
 
-                    {!file ? (
-                        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                <Upload className="w-10 h-10 text-gray-400 mb-2" />
-                                <p className="text-sm text-gray-600">
-                                    <span className="font-semibold">Click to upload</span> or drag and drop
-                                </p>
-                                <p className="text-xs text-gray-500">Video files only (Max 100MB)</p>
-                            </div>
-                            <input
-                                type="file"
-                                className="hidden"
-                                accept="video/*"
-                                onChange={handleFileChange}
-                                disabled={uploading}
-                            />
-                        </label>
-                    ) : (
-                        <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                            <div className="flex items-center gap-3">
-                                <Upload className="w-5 h-5 text-blue-600" />
-                                <div>
-                                    <p className="text-sm font-semibold text-gray-800">{file.name}</p>
-                                    <p className="text-xs text-gray-500">
-                                        {(file.size / (1024 * 1024)).toFixed(2)} MB
+                    {/* File Input */}
+                    <div className="space-y-2">
+                        <Label>Video File</Label>
+                        {!file ? (
+                            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors border-muted-foreground/25">
+                                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                    <Upload className="w-8 h-8 text-muted-foreground mb-2" />
+                                    <p className="text-sm font-medium text-muted-foreground">
+                                        Click to upload or drag and drop
                                     </p>
+                                    <p className="text-xs text-muted-foreground/75">Video files only (Max 100MB)</p>
                                 </div>
+                                <input
+                                    type="file"
+                                    className="hidden"
+                                    accept="video/*"
+                                    onChange={handleFileChange}
+                                    disabled={uploading}
+                                />
+                            </label>
+                        ) : (
+                            <div className="flex items-center justify-between p-3 bg-muted rounded-lg border">
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                    <div className="bg-background p-2 rounded-md">
+                                        <FileVideo className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium truncate">{file.name}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {(file.size / (1024 * 1024)).toFixed(2)} MB
+                                        </p>
+                                    </div>
+                                </div>
+                                {!uploading && (
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={removeFile}
+                                        className="text-muted-foreground hover:text-destructive"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </Button>
+                                )}
                             </div>
-                            {!uploading && (
-                                <button
-                                    type="button"
-                                    onClick={removeFile}
-                                    className="text-red-600 hover:text-red-700"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
-                            )}
+                        )}
+                    </div>
+
+                    {/* Progress Bar */}
+                    {uploading && (
+                        <div className="space-y-1">
+                            <div className="flex justify-between text-xs text-muted-foreground">
+                                <span>Uploading...</span>
+                                <span>{progress}%</span>
+                            </div>
+                            // Note: We need to install standard progress, or use customized one.
+                            // Using standard HTML progress for simplicity if Shadcn Progress not installed yet? 
+                            // I installed 'skeleton', 'badge', 'alert' but NOT 'progress'.
+                            // Let's use a simple div for now to avoid error, or assume I should stick to custom div if Progress is missing.
+                            // Actually 'progress' component is part of shadcn but I didn't install it. 
+                            {/* Falling back to custom styled progress bar to avoid missing dependency error */}
+                            <div className="w-full bg-secondary h-2 rounded-full overflow-hidden">
+                                <div
+                                    className="bg-primary h-full transition-all duration-300"
+                                    style={{ width: `${progress}%` }}
+                                />
+                            </div>
                         </div>
                     )}
-                </div>
 
-                {/* Error Message */}
-                {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                        {error}
+                    <div className="flex justify-end gap-3">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onOpenChange(false)}
+                            disabled={uploading}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            disabled={uploading || !title.trim() || !file}
+                        >
+                            {uploading ? 'Uploading...' : 'Upload Video'}
+                        </Button>
                     </div>
-                )}
-
-                {/* Progress Bar */}
-                {uploading && (
-                    <div>
-                        <div className="flex justify-between text-sm text-gray-600 mb-1">
-                            <span>Uploading...</span>
-                            <span>{progress}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                            <div
-                                className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
-                                style={{ width: `${progress}%` }}
-                            ></div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Submit Button */}
-                <button
-                    type="submit"
-                    disabled={uploading || !title.trim() || !file}
-                    className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {uploading ? 'Uploading...' : 'Upload Video'}
-                </button>
-            </form>
-        </div>
+                </form>
+            </DialogContent>
+        </Dialog>
     )
 }
 
