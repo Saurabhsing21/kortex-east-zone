@@ -8,7 +8,7 @@
     "createdAt": "2026-01-26T14:15:13.389Z",
     "duration": 12,
     "format": "mp4",
-    "views": 2
+    "views": 3
   },
   {
     "id": "1769437107828",
@@ -30,6 +30,17 @@
     "createdAt": "2026-01-26T14:23:14.687Z",
     "duration": 0,
     "format": "mp4",
-    "views": 8
+    "views": 9
+  },
+  {
+    "id": "1769582603478",
+    "title": "testing209",
+    "public_id": "video_1769582603455_testing209.mp4",
+    "secure_url": "http://localhost:5000/uploads/video_1769582603455_testing209.mp4",
+    "uploadedBy": "1",
+    "createdAt": "2026-01-28T06:43:23.478Z",
+    "duration": 0,
+    "format": "mp4",
+    "views": 3
   }
 ]
