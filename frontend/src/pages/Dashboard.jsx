@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from '../lib/api'
 import Header from '../components/Header'
 import VideoCard from '../components/VideoCard'
 import VideoUpload from '../components/VideoUpload'
@@ -10,8 +10,6 @@ import { useAuth } from '../context/AuthContext'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
-
-const API_URL = import.meta.env.VITE_API_URL
 
 function Dashboard() {
     const { user } = useAuth()
@@ -26,9 +24,6 @@ function Dashboard() {
     // Determine user role (ensure user object exists)
     const userRole = user?.role || 'user'
     const isAdmin = userRole === 'admin'
-
-    // Helper to get token for requests
-    const getToken = () => localStorage.getItem('token')
 
     useEffect(() => {
         fetchVideos()
@@ -49,12 +44,7 @@ function Dashboard() {
     const fetchVideos = async () => {
         try {
             setLoading(true)
-            const token = getToken()
-            const response = await axios.get(`${API_URL}/videos`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            })
+            const response = await api.get('/videos')
             setVideos(response.data)
             setFilteredVideos(response.data)
         } catch (error) {
@@ -73,12 +63,7 @@ function Dashboard() {
         if (!confirm('Are you sure you want to delete this video?')) return
 
         try {
-            const token = getToken()
-            await axios.delete(`${API_URL}/videos/${publicId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            })
+            await api.delete(`/videos/${publicId}`)
             fetchVideos()
         } catch (error) {
             console.error('Error deleting video:', error)
